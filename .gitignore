@@ -1,0 +1,13 @@
+.venv/
+.venv311/
+__pycache__/
+*.pyc
+.DS_Store
+models/*.joblib
+models/*.pkl
+models/*.bin
+data/raw/*.zip
+data/raw/*.csv
+!.gitignore
+!.gitattributes
+web/data/road_predictions.geojson

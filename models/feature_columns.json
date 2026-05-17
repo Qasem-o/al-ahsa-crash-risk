@@ -1,0 +1,18 @@
+[
+  "highway",
+  "oneway",
+  "lanes",
+  "bridge",
+  "tunnel",
+  "dominant_weather",
+  "curvature_ratio",
+  "is_primary",
+  "is_secondary",
+  "is_tertiary",
+  "length",
+  "maxspeed",
+  "mean_rain_mm",
+  "mean_temp_c",
+  "mean_visibility_km",
+  "segment_id"
+]

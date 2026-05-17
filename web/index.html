@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Al Ahsa Crash Risk Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Al Ahsa Crash Risk Map</h1>
+      <p>Explore the Al Ahsa road network, then hover or click any segment to inspect the risk and tune weather to see live changes.</p>
+    </header>
+    <main>
+      <section id="map-summary">
+        <strong>How to use:</strong>
+        <span>Pan or zoom around Al Ahsa, hover roads for at-a-glance risk, and click to pin full details in the panel.</span>
+      </section>
+      <section id="controls">
+        <form id="weather-form">
+          <h2>Weather Overrides</h2>
+          <div class="control-row">
+            <label for="weather-condition">Condition</label>
+            <select id="weather-condition">
+              <option value="">Modelled baseline</option>
+              <option value="clear">Clear</option>
+              <option value="rainy">Rainy</option>
+              <option value="foggy">Foggy</option>
+              <option value="dusty">Dusty</option>
+              <option value="storm">Storm</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label>
+              <input type="checkbox" id="rain-toggle" /> Override rainfall (mm)
+            </label>
+            <input type="range" id="rain-mm" min="0" max="15" step="0.5" value="3" disabled />
+            <span class="control-value" id="rain-mm-value">Baseline</span>
+          </div>
+          <div class="control-row">
+            <label>
+              <input type="checkbox" id="visibility-toggle" /> Override visibility (km)
+            </label>
+            <input type="range" id="visibility-km" min="2" max="20" step="0.5" value="12" disabled />
+            <span class="control-value" id="visibility-km-value">Baseline</span>
+          </div>
+          <div class="control-row">
+            <label>
+              <input type="checkbox" id="temperature-toggle" /> Override temperature (°C)
+            </label>
+            <input type="range" id="temperature-c" min="20" max="48" step="0.5" value="35" disabled />
+            <span class="control-value" id="temperature-c-value">Baseline</span>
+          </div>
+          <button type="button" id="reset-weather">Reset overrides</button>
+        </form>
+      </section>
+      <div class="map-layout">
+        <div id="map"></div>
+        <aside id="info-panel">
+          <h2>Segment Details</h2>
+          <dl>
+            <dt>Segment ID</dt>
+            <dd id="segment-id">—</dd>
+            <dt>Road Name</dt>
+            <dd id="segment-name">—</dd>
+            <dt>Classification</dt>
+            <dd id="segment-highway">—</dd>
+            <dt>Length (m)</dt>
+            <dd id="segment-length">—</dd>
+            <dt>Predicted Crash %</dt>
+            <dd id="segment-risk">—</dd>
+          </dl>
+        </aside>
+      </div>
+    </main>
+    <footer>
+      <small>Predictions are illustrative. Replace synthetic data with official crash records for production use.</small>
+    </footer>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="js/app.js" type="module"></script>
+  </body>
+</html>
