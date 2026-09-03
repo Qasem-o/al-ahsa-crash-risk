@@ -32,9 +32,40 @@ MODEL_NUMERIC_COLUMNS = NUMERIC_COLUMNS
 MODEL_FEATURE_COLUMNS = MODEL_CATEGORICAL_COLUMNS + MODEL_NUMERIC_COLUMNS
 
 
-def _normalise_maxspeed(series: pd.Series) -> pd.Series:
+# OSM tags a speed limit on only a small minority of segments in this extract,
+# so filling from the median of the tagged rows would collapse the feature to a
+# single constant. Fall back to a per-class default instead, which at least
+# preserves the ordering between road classes.
+DEFAULT_MAXSPEED_BY_HIGHWAY = {
+    "motorway": 120,
+    "motorway_link": 80,
+    "trunk": 100,
+    "trunk_link": 70,
+    "primary": 80,
+    "primary_link": 60,
+    "secondary": 60,
+    "secondary_link": 50,
+    "tertiary": 50,
+    "tertiary_link": 40,
+    "unclassified": 40,
+    "residential": 40,
+    "living_street": 20,
+    "service": 30,
+}
+FALLBACK_MAXSPEED = 50
+
+
+def _normalise_maxspeed(series: pd.Series, highway: pd.Series | None = None) -> pd.Series:
     cleaned = pd.to_numeric(series, errors="coerce")
-    return cleaned.fillna(cleaned.median())
+    if highway is None:
+        return cleaned.fillna(FALLBACK_MAXSPEED)
+    defaults = (
+        highway.astype(str)
+        .str.strip("[]'\" ")
+        .map(DEFAULT_MAXSPEED_BY_HIGHWAY)
+        .fillna(FALLBACK_MAXSPEED)
+    )
+    return cleaned.fillna(defaults).astype(float)
 
 
 def _categorical_fill(series: pd.Series) -> pd.Series:
@@ -73,10 +104,13 @@ def engineer_segment_table(
         else:
             gdf[col] = "unknown"
 
+    # gdf["highway"] was filled above, so it is always available here.
     if "maxspeed" in gdf.columns:
-        gdf["maxspeed"] = _normalise_maxspeed(gdf["maxspeed"])
+        gdf["maxspeed"] = _normalise_maxspeed(gdf["maxspeed"], gdf["highway"])
     else:
-        gdf["maxspeed"] = gdf["length"].clip(lower=20, upper=120)  # heuristic fallback
+        gdf["maxspeed"] = _normalise_maxspeed(
+            pd.Series(index=gdf.index, dtype="float64"), gdf["highway"]
+        )
 
     gdf["curvature_ratio"] = compute_curvature(gdf.geometry)
     gdf["is_primary"] = (gdf["highway"] == "primary").astype(int)

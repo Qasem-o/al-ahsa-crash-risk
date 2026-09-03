@@ -9,7 +9,11 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const API_BASE = (() => {
-  if (window.location.port && window.location.port !== '8000') {
+  // The FastAPI app serves this page itself, so a same-origin relative URL
+  // works on whatever port uvicorn was started with. Only a separate static
+  // server (VS Code Live Server and friends) needs an absolute URL.
+  const STATIC_SERVER_PORTS = ['5500', '5501'];
+  if (STATIC_SERVER_PORTS.includes(window.location.port)) {
     return `${window.location.protocol}//${window.location.hostname}:8000`;
   }
   return '';

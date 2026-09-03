@@ -58,18 +58,23 @@ def score_to_geojson() -> gpd.GeoDataFrame:
     feature_df = data_io.load_segment_features()
     model = models.load_model_or_heuristic()
     metadata = models.load_metadata()
-    risk_scale = float(metadata.get("risk_scale", models.DEFAULT_RISK_SCALE))
+    risk_scale = models.resolve_risk_scale(model, metadata)
 
     prediction_input = _select_model_features(feature_df, model)
     predictions = model.predict(prediction_input)
 
-    result = roads.merge(
-        feature_df[["segment_id"]],
-        on="segment_id",
-        how="left",
+    # Join predictions on segment_id rather than row position: the parquet and
+    # the GeoJSON are loaded independently and need not share an ordering.
+    scored = pd.DataFrame(
+        {
+            "segment_id": feature_df["segment_id"].to_numpy(),
+            "predicted_crash_rate_per_km": np.asarray(predictions, dtype=float),
+        }
     )
-    result["predicted_crash_rate_per_km"] = predictions
-    result["predicted_crash_percent"] = models.rate_to_percent(predictions, risk_scale)
+    scored["predicted_crash_percent"] = models.rate_to_percent(
+        scored["predicted_crash_rate_per_km"].to_numpy(), risk_scale
+    )
+    result = roads.merge(scored, on="segment_id", how="left")
     data_io.save_geojson(result, config.PREDICTIONS_GEOJSON)
     return result
 

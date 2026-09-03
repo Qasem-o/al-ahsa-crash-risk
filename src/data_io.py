@@ -8,7 +8,6 @@ from typing import Any, Dict, Iterable, Tuple
 import geopandas as gpd
 import pandas as pd
 from loguru import logger
-import json
 from shapely.geometry import shape
 
 from . import config
@@ -24,7 +23,7 @@ def load_roads(filepath: Path | None = None) -> gpd.GeoDataFrame:
         # Some Fiona/OGR builds fail parsing certain GeoJSON properties
         # (JSONField -> json.loads errors). Fall back to a safe loader
         # using the stdlib json + shapely geometry construction.
-        logger.warning("gpd.read_file failed (%s); falling back to json loader", exc)
+        logger.warning("gpd.read_file failed ({}); falling back to json loader", exc)
         with path.open("r", encoding="utf-8") as fh:
             doc = json.load(fh)
         features = doc.get("features", [])

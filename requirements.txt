@@ -1,5 +1,7 @@
-# Windows run example:
-# Set-Location "location file"; & ".\.venv\Scripts\python.exe" -m uvicorn src.api:app --reload --host 127.0.0.1 --port 8001
+# Run the app (from the repository root), then open http://127.0.0.1:8000:
+#   uvicorn src.api:app --reload --host 127.0.0.1 --port 8000
+# Windows PowerShell:
+#   & ".\.venv\Scripts\python.exe" -m uvicorn src.api:app --reload --host 127.0.0.1 --port 8000
 fastapi==0.110.2
 uvicorn[standard]==0.29.0
 pydantic==2.7.1

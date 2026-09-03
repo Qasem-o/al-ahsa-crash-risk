@@ -26,6 +26,8 @@ app.add_middleware(
         "http://0.0.0.0:5500",
         "http://127.0.0.1:8000",
         "http://localhost:8000",
+        "http://127.0.0.1:8001",
+        "http://localhost:8001",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -147,7 +149,7 @@ def _load_assets() -> None:
     _cached_features = _ensure_feature_columns(_cached_features)
     _model = models.load_model_or_heuristic()
     metadata = models.load_metadata()
-    _risk_scale = float(metadata.get("risk_scale", models.DEFAULT_RISK_SCALE))
+    _risk_scale = models.resolve_risk_scale(_model, metadata)
 
 
 @app.get("/api/ping")

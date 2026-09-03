@@ -32,6 +32,11 @@ class ModelArtifacts:
 class HeuristicCrashModel:
     """Simple rule-based fallback when a trained model is unavailable."""
 
+    # The heuristic already emits a 0-100 risk score, so it is its own
+    # percentage scale. The trained model emits crash_rate_per_km instead and
+    # takes its scale from the saved metadata.
+    risk_scale = DEFAULT_RISK_SCALE
+
     def __init__(self) -> None:
         logger.warning("Using heuristic crash model. Train a model for better accuracy.")
 
@@ -176,8 +181,15 @@ def load_model_or_heuristic() -> Any:
         metadata_path=config.MODEL_METADATA,
     )
     if artifacts.model_path.exists() and artifacts.feature_columns_path.exists():
-        logger.info("Loading trained model from disk")
-    logger.warning("Model artifacts missing; falling back to heuristic model")
+        try:
+            model = CrashRiskModel.load(artifacts)
+        except Exception as exc:  # noqa: BLE001 - degrade instead of failing startup
+            logger.warning("Failed to load trained model ({}); falling back to heuristic", exc)
+        else:
+            logger.info("Loaded trained model from {}", artifacts.model_path)
+            return model
+    else:
+        logger.warning("Model artifacts missing; falling back to heuristic model")
     return HeuristicCrashModel()
 
 
@@ -191,6 +203,22 @@ def load_metadata(default: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     except (json.JSONDecodeError, OSError) as exc:
         logger.warning("Failed to read model metadata: {}", exc)
         return default
+
+
+def resolve_risk_scale(model: Any, metadata: Optional[Dict[str, Any]] = None) -> float:
+    """Return the divisor that turns this model's output into a percentage.
+
+    A model may carry its own scale (the heuristic does, because it already
+    emits 0-100). Anything else is scored in crash_rate_per_km and is scaled by
+    the 99th percentile recorded in the model metadata at training time.
+    """
+    model_scale = getattr(model, "risk_scale", None)
+    if model_scale is not None:
+        return max(float(model_scale), 1.0)
+    if metadata is None:
+        metadata = load_metadata()
+    scale = metadata.get("risk_scale", DEFAULT_RISK_SCALE) or DEFAULT_RISK_SCALE
+    return max(float(scale), 1.0)
 
 
 def rate_to_percent(values: Any, risk_scale: float) -> Any:
