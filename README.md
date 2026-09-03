@@ -35,7 +35,18 @@ End-to-end reference implementation for predicting crash likelihood on road segm
 
 ## Quick Start
 
+Run every command from the repository root.
+
 1. **Create and activate a Python environment** (Python 3.10+ recommended):
+
+   macOS / Linux:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+   Windows PowerShell:
 
    ```powershell
    py -3 -m venv .venv
@@ -44,13 +55,13 @@ End-to-end reference implementation for predicting crash likelihood on road segm
 
 2. **Install dependencies**:
 
-   ```powershell
+   ```bash
    pip install -r requirements.txt
    ```
 
 3. **Generate synthetic crash history** (skip if you have real data):
 
-   ```powershell
+   ```bash
    python scripts/generate_synthetic_crash_data.py
    ```
 
@@ -58,21 +69,23 @@ End-to-end reference implementation for predicting crash likelihood on road segm
 
 4. **Train the model & export predictions**:
 
-   ```powershell
-   python src/pipeline.py train
+   ```bash
+   python -m src.pipeline train
    python scripts/build_predictions_geojson.py
    ```
 
-   - `pipeline.py train` fits a Gradient Boosting Regressor on engineered features and saves the model under `models/`.
+   - `python -m src.pipeline train` fits a Gradient Boosting Regressor on engineered features and saves the model under `models/`. Run it as a module (`-m`), not as `python src/pipeline.py` - the package uses relative imports.
    - `build_predictions_geojson.py` uses the trained model to create a GeoJSON with crash percentages for each road segment (stored under `web/data/road_predictions.geojson`).
+
+   > The trained model (`models/*.joblib`) and the exported predictions are gitignored, so a fresh clone must run these two steps. Until you do, the API falls back to a rule-based heuristic and logs `Model artifacts missing`. When the trained model is picked up you will see `Loaded trained model from ...` at startup.
 
 5. **Launch the interactive map** (serves FastAPI backend + static Leaflet app):
 
-   ```powershell
-   uvicorn src.api:app --reload --host 0.0.0.0 --port 8000
+   ```bash
+   uvicorn src.api:app --reload --host 127.0.0.1 --port 8000
    ```
 
-   Visit `http://localhost:8000` to explore the map. Clicking on a road segment reveals the predicted crash percentage and key metadata.
+   Visit `http://localhost:8000` to explore the map. The page is served by the API itself and calls it with relative URLs, so any port works. Clicking on a road segment reveals the predicted crash percentage and key metadata.
    Use the **Weather Overrides** panel to apply live rainfall, visibility, temperature, or categorical weather conditions (clear, rainy, dusty, foggy, storm). Adjustments are sent to the API as query parameters so the crash model re-scores segments instantly under the selected scenario.
 
 ## Working with Real Crash Data

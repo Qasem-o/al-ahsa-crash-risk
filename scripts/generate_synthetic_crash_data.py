@@ -3,12 +3,18 @@ from __future__ import annotations
 
 import hashlib
 import random
+import sys
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from loguru import logger
 from shapely.geometry import LineString
+
+# Allow running this file directly (python scripts/<name>.py) by putting the
+# repository root on sys.path before importing the src package.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src import config, data_io
 

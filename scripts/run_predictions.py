@@ -4,12 +4,17 @@ This script loads the GeoJSON with the stdlib json module and builds geometries 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 from shapely.geometry import shape
+
+# Allow running this file directly (python scripts/<name>.py) by putting the
+# repository root on sys.path before importing the src package.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src import config, data_io, models, features
 
